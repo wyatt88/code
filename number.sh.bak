@@ -1,0 +1,28 @@
+#!/bin/bash
+
+read -p "start date:" -s startdate
+read -p "end date:" -s enddate
+now=`date +%Y%m%d`
+year=`date`
+staticfile=/root/$now
+dir1=$startdate$enddate
+hisp=`expr $enddate + 1`
+echo $hisp
+if [ ! -d $dir1 ]
+then
+   mkdir $dir1
+fi
+url="http://cai.163.com/trend/ssq_basic.html?beginPeriod=$startdate&endPeriod=$enddate&historyPeriod=$hisp&year="
+echo url
+wget $url
+result=`ls | grep ssq | grep $startdate | grep $enddate`
+echo $result
+mv $result $dir1/1.tmp
+
+cd $dir1
+lines=`cat 1.tmp | grep 开奖日期 | wc -l`
+echo "共$lines期" >> $staticfile
+
+cat 1.tmp | grep chartBall  > 2.tmp
+sed -i '/^.*br01.*$/'d 2.tmp
+
