@@ -1,7 +1,7 @@
 __author__ = 'wyatt'
 #coding: utf-8
 
-
+from time import sleep
 import urllib2
 import telnetlib
 import os,sys
@@ -10,8 +10,8 @@ from pyquery import PyQuery
 import logging
 
 init_list=[]
-host_user="xxx"
-host_pwd="xxxxxx"
+host_user="mmb"
+host_pwd="sjwx.2015/new"
 baseurl="http://192.168.0.13/sensorlist.htm?listid="
 host_dict={"192.168.3.12":[host_user,host_pwd,1400],
            "192.168.3.14":[host_user,host_pwd,1606],
@@ -20,7 +20,7 @@ host_dict={"192.168.3.12":[host_user,host_pwd,1400],
            "192.168.3.10":[host_user,host_pwd,1244],
            "192.168.3.13":[host_user,host_pwd,1476]
            }
-
+max_speed = 5000
 reload(sys)
 sys.setdefaultencoding('utf-8')
 logging.basicConfig(filename="logs/app.log",level=logging.INFO)
@@ -51,7 +51,7 @@ def run_telnet_session(host,interface):
 
 def get_devtrs(listid):
     av_url=baseurl+str(listid)
-    print av_url
+    # print av_url
     doc = PyQuery(url=av_url)
     tr_list=doc('tr').filter('.onesensor')
     return tr_list
@@ -68,34 +68,38 @@ def get_devtrs(listid):
 #fs.write(html.decode('gb2312','ignore').encode('utf-8'))
 #fs.close()
 #doc = pq(filename='test.html')
+i = 0
 
-for host_ip in host_dict.keys():
-    tmp_dict={}
-    tmp_dict={host_ip:[]}
-    listid = host_dict[host_ip][2]
-    trs_list = get_devtrs(listid)
-    print host_ip
-    # print trs_list
-    for tr in trs_list:
-        try:
-            interface = tr.getchildren()[1].getchildren()[1].text.decode('gb2312','ignore').split()[2]
-            speed_tu=tr.getchildren()[2].text.split(',')
-            if len(speed_tu) > 1:
-                speed = int(speed_tu[0]+speed_tu[1])
-                if interface.find("Gig")==-1:
-                    if speed > 5000:
-                        tmp_dict[host_ip].append(interface)
-        except:
-            continue
-    logging.info(tmp_dict)
-    if len(tmp_dict[host_ip])>0:
+while True:
+    sleep(30)
+    i+=1
+    for host_ip in host_dict.keys():
+        tmp_dict={}
+        tmp_dict[host_ip]=[]
+        listid = host_dict[host_ip][2]
+        trs_list = get_devtrs(listid)
+        print host_ip
+        # print trs_list
+        for tr in trs_list:
+            try:
+                interface = tr.getchildren()[1].getchildren()[1].text.decode('gb2312','ignore').split()[2]
+                speed_tu=tr.getchildren()[2].text.split(',')
+                if len(speed_tu) > 1:
+                    speed = int(speed_tu[0]+speed_tu[1])
+                    if interface.find("Gig")==-1:
+                        if speed > 5000:
+                            tmp_dict[host_ip].append(interface)
+            except:
+                continue
+        logging.info(tmp_dict)
+        if len(tmp_dict[host_ip])>0:
 
-        interface_list=tmp_dict[host_ip]
-        for inf in interface_list:
-            if inf != "":
-                inf_num=inf.split('net')[1].replace(')','')
-                if run_telnet_session(host_ip,str(inf_num)):
-                    logging.info("interface "+inf_num+" on "+host_ip+" rate is 2048")
+            interface_list=tmp_dict[host_ip]
+            for inf in interface_list:
+                if inf != "":
+                    inf_num=inf.split('net')[1].replace(')','')
+                    if run_telnet_session(host_ip,str(inf_num)):
+                        logging.info("interface "+inf_num+" on "+host_ip+" rate is 2048")
 
 
 
