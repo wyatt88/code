@@ -10,8 +10,8 @@ from pyquery import PyQuery
 import logging
 
 init_list=[]
-host_user="mmb"
-host_pwd="sjwx.2015/new"
+host_user="xxxxx"
+host_pwd="xxxxxxx"
 baseurl="http://192.168.0.13/sensorlist.htm?listid="
 host_dict={"192.168.3.12":[host_user,host_pwd,1400],
            "192.168.3.14":[host_user,host_pwd,1606],
