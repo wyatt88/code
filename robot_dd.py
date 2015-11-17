@@ -9,6 +9,8 @@ from multiprocessing.dummy import Pool as ThreadPools
 import re
 from pyquery import PyQuery
 
+reload(sys)
+sys.setdefaultencoding('utf-8')
 class collectData():
     def __init__(self,keywords):
         self.initUrl1 = "http://www.zufangzi.com/house/houseControllor/conditionSearchKeyword.do?parameter1=0&parameter2=22200&pageNum="
@@ -44,15 +46,16 @@ class collectData():
             # housereps = urllib2.urlopen(houseurl)
 
             try:
-                housedoc = PyQuery(url=EHU[0])
-                EHprice = str(housedoc('div').filter('.xqyC1R_1').find('i')).split(';')[1].replace('</i>','')
-                EHdetails = housedoc('div').filter('.xqyC1R_3').find('p')
-                EHarea = str(EHdetails.find('em').text())
-                EHcommunite = str(EHdetails.eq(7).text().split()[1])
+                housedoc = PyQuery(url=houseurl)
+
                 # househtml = housereps.read()
             except:
                 print "EH Error"
             else:
+                EHprice = str(housedoc('div').filter('.xqyC1R_1').find('i')).split(';')[1].replace('</i>','')
+                EHdetails = housedoc('div').filter('.xqyC1R_3').find('p')
+                EHarea = EHdetails.find('em').text()
+                EHcommunite = EHdetails.eq(7).text().split()[1]
                 housedict={houseurl:[EHcommunite,EHprice,EHarea]}
                 houselist.append(housedict)
         return houselist
@@ -71,8 +74,6 @@ class collectData():
             maxpagenum = self.getMax(html)
             self.accessEveryPage(keyword,maxpagenum)
 
-
-
     def run(self):
         pool = ThreadPools(len(self.kwdList))
         pool.map(self.getPageList,self.kwdList)
@@ -86,7 +87,7 @@ class collectData():
 
 
 keywordList = [
-    "中关村"
+    u'中关村'
 ]
 if __name__ == "__main__":
     totalDataDict = {}
@@ -95,3 +96,4 @@ if __name__ == "__main__":
     datafile = open('dingdingDATA.txt','w')
     datafile.write(str(totalDataDict))
     datafile.close()
+    print totalDataDict
