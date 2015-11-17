@@ -1,16 +1,17 @@
 #!/usr/bin/python
-#coding: utf-8
+# -*- coding:utf-8 -*-
 __author__ = 'wenwen'
 
 import urllib2
-import urllib
-import os,sys
+import sys
 from multiprocessing.dummy import Pool as ThreadPools
 import re
 from pyquery import PyQuery
+from time import sleep
 
 reload(sys)
-sys.setdefaultencoding('utf-8')
+sys.setdefaultencoding("utf-8")
+
 class collectData():
     def __init__(self,keywords):
         self.initUrl1 = "http://www.zufangzi.com/house/houseControllor/conditionSearchKeyword.do?parameter1=0&parameter2=22200&pageNum="
@@ -39,7 +40,6 @@ class collectData():
         houselist = self.accessEveryHouse(everyhouseurl)
         totalDataDict[str(keyword)] = houselist
 
-
     def accessEveryHouse(self,EHU):
         houselist=[]
         for houseurl in EHU:
@@ -56,7 +56,7 @@ class collectData():
                 EHdetails = housedoc('div').filter('.xqyC1R_3').find('p')
                 EHarea = EHdetails.find('em').text()
                 EHcommunite = EHdetails.eq(7).text().split()[1]
-                housedict={houseurl:[EHcommunite,EHprice,EHarea]}
+                housedict={houseurl:[str(EHcommunite).encode('utf-8'),EHprice,str(EHarea).encode('utf-8')]}
                 houselist.append(housedict)
         return houselist
 
@@ -65,11 +65,12 @@ class collectData():
 
     def getPageList(self,keyword):
         firsturl = self.initUrl1+"1"+self.initUrl2+keyword
-        reps = urllib2.urlopen(firsturl)
         try:
+            reps = urllib2.urlopen(firsturl)
             html = reps.read()
-        except:
-            print "Error"
+        except urllib2.HTTPError as e:
+            if e.code == 404:
+                sleep(5)
         else:
             maxpagenum = self.getMax(html)
             self.accessEveryPage(keyword,maxpagenum)
@@ -80,20 +81,26 @@ class collectData():
         pool.close()
         pool.join()
 
-
-
-
-
-
-
 keywordList = [
-    u'中关村'
+    '中关村',
+    '世纪城',
+    '西单',
+    '洋桥',
+    '西苑'
+
 ]
 if __name__ == "__main__":
     totalDataDict = {}
     dingdingCollect = collectData(keywordList)
     dingdingCollect.run()
+    unicode2chinese = str(totalDataDict).decode('string_escape')
     datafile = open('dingdingDATA.txt','w')
-    datafile.write(str(totalDataDict))
-    datafile.close()
-    print totalDataDict
+    try:
+        datafile.write(unicode2chinese.encode('utf-8'))
+    except:
+        print "Write file Error"
+    finally:
+        datafile.close()
+        print unicode2chinese
+#        for kw in keywordList:
+#            print str(len(totalDataDict[kw]))+' '+kw
